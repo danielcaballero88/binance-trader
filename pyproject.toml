@@ -3,22 +3,28 @@ name = "binance-trader"
 version = "0.1.0"
 description = ""
 authors = [{ name = "Daniel Caballero", email = "danielcaballero88@gmail.com" }]
-readme = "README.md"
 requires-python = ">=3.14"
+readme = "README.md"
 dependencies = ["requests>=2.31.0,<3.0.0"]
 
-[tool.poetry]
-packages = [{ include = "binance_trader", from = "src" }]
+[tool.hatch.build.targets.sdist]
+include = ["src/binance_trader"]
+
+[tool.hatch.build.targets.wheel]
+include = ["src/binance_trader"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/binance_trader" = "binance_trader"
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
-  "types-requests (>=2.32.4.20250913,<3.0.0.0)",
-  "black (>=25.11.0,<26.0.0)",
-  "pytest (>=9.0.2,<10.0.0)",
-  "pytest-mypy (>=1.0.1,<2.0.0)",
-  "pytest-cov (>=7.0.0,<8.0.0)",
+    "types-requests (>=2.32.4.20250913,<3.0.0.0)",
+    "black (>=25.11.0,<26.0.0)",
+    "pytest (>=9.0.2,<10.0.0)",
+    "pytest-mypy (>=1.0.1,<2.0.0)",
+    "pytest-cov (>=7.0.0,<8.0.0)",
 ]
