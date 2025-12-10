@@ -50,6 +50,14 @@ class HttpxRequester(Requester):
         resp = await self._async_client.request(method, url, **kwargs)
         return self._handle_response(resp)
 
+    def _maybe_async_request(self, method: str, url: str, **kwargs) -> Any:
+        """Return a coroutine in async context, otherwise perform sync request."""
+        try:
+            asyncio.get_running_loop()
+            return self._async_request(method, url, **kwargs)
+        except RuntimeError:
+            return self._sync_request(method, url, **kwargs)
+
     def get(
         self,
         url: str,
@@ -57,16 +65,9 @@ class HttpxRequester(Requester):
         headers: Optional[Dict[str, str]] = None,
         timeout: Optional[float] = None,
     ) -> Any:
-        try:
-            # If an event loop is running, return coroutine for caller to await
-            asyncio.get_running_loop()
-            return self._async_request(
-                "GET", url, params=params, headers=headers, timeout=timeout
-            )
-        except RuntimeError:
-            return self._sync_request(
-                "GET", url, params=params, headers=headers, timeout=timeout
-            )
+        return self._maybe_async_request(
+            "GET", url, params=params, headers=headers, timeout=timeout
+        )
 
     def post(
         self,
@@ -76,22 +77,11 @@ class HttpxRequester(Requester):
         headers: Optional[Dict[str, str]] = None,
         timeout: Optional[float] = None,
     ) -> Any:
-        try:
-            asyncio.get_running_loop()
-            return self._async_request(
-                "POST",
-                url,
-                data=data,
-                json=json,
-                headers=headers,
-                timeout=timeout,
-            )
-        except RuntimeError:
-            return self._sync_request(
-                "POST",
-                url,
-                data=data,
-                json=json,
-                headers=headers,
-                timeout=timeout,
-            )
+        return self._maybe_async_request(
+            "POST",
+            url,
+            data=data,
+            json=json,
+            headers=headers,
+            timeout=timeout,
+        )
