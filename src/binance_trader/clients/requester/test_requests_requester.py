@@ -1,6 +1,5 @@
 """Unit tests for RequestsRequester."""
 
-import json
 from unittest.mock import MagicMock, patch
 
 import pytest
