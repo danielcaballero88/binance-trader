@@ -5,8 +5,6 @@ from __future__ import annotations
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
-
 from binance_trader.clients.requester.httpx_requester import HttpxRequester
 
 
@@ -89,7 +87,7 @@ def test_post_json_response_async():
 
     async def runner():
         async_mock = AsyncMock(return_value=mock_response)
-        with patch.object(requester._async_client, "request", async_mock) as m:
+        with patch.object(requester._async_client, "request", async_mock):
             return await requester.post("https://example.com/api/orders", json={"a": 1})
 
     result = asyncio.run(runner())
