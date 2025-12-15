@@ -1,63 +1,70 @@
-"""Command line interface for quick Binance API interactions.
+"""CLI for quick Binance API interactions.
 
-Provides simple commands: `ping`, `time`, and `exchange-info`.
+Uses `typer` for nicer help, automatic validation, and easy completion support.
 """
 
 from __future__ import annotations
 
-import argparse
 import json
-import sys
 from typing import Optional
+
+import typer
 
 from .clients.binance.client import BinanceClient
 from .clients.requester.httpx_requester import HttpxRequester
 from .clients.requester.requests_requester import RequestsRequester
 
+app = typer.Typer(help="Interact with the Binance public REST API")
 
-def _build_requester(name: str, timeout: Optional[float] = None):
+
+def _build_requester(name: str):
     if name == "httpx":
         return HttpxRequester()
     return RequestsRequester()
 
 
+@app.command()
+def ping(
+    base_url: str = typer.Option("https://api.binance.com", help="Binance base URL"),
+    requester: str = typer.Option("requests", help="Requester backend: requests|httpx"),
+    timeout: Optional[float] = typer.Option(None, help="Request timeout in seconds"),
+):
+    """Test connectivity to the REST API."""
+    req = _build_requester(requester)
+    client = BinanceClient(req, base_url=base_url, timeout=timeout)
+    res = client.ping()
+    typer.echo(json.dumps(res, indent=2, ensure_ascii=False))
+
+
+@app.command()
+def time(
+    base_url: str = typer.Option("https://api.binance.com", help="Binance base URL"),
+    requester: str = typer.Option("requests", help="Requester backend: requests|httpx"),
+    timeout: Optional[float] = typer.Option(None, help="Request timeout in seconds"),
+):
+    """Get server time."""
+    req = _build_requester(requester)
+    client = BinanceClient(req, base_url=base_url, timeout=timeout)
+    res = client.time()
+    typer.echo(json.dumps(res, indent=2, ensure_ascii=False))
+
+
+@app.command("exchange-info")
+def exchange_info(
+    symbol: Optional[str] = typer.Option(None, help="Filter by symbol (e.g. BTCUSDT)"),
+    base_url: str = typer.Option("https://api.binance.com", help="Binance base URL"),
+    requester: str = typer.Option("requests", help="Requester backend: requests|httpx"),
+    timeout: Optional[float] = typer.Option(None, help="Request timeout in seconds"),
+):
+    """Get exchange information."""
+    req = _build_requester(requester)
+    client = BinanceClient(req, base_url=base_url, timeout=timeout)
+    res = client.exchange_info(symbol=symbol)
+    typer.echo(json.dumps(res, indent=2, ensure_ascii=False))
+
+
 def main(argv: Optional[list[str]] = None) -> int:  # pragma: no cover - CLI
-    parser = argparse.ArgumentParser(prog="binance-trader")
-    parser.add_argument("--base-url", default="https://api.binance.com")
-    parser.add_argument(
-        "--requester", choices=["requests", "httpx"], default="requests"
-    )
-    parser.add_argument("--timeout", type=float, default=None)
-
-    sub = parser.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("ping", help="Test connectivity to the REST API")
-    sub.add_parser("time", help="Get server time")
-    ex = sub.add_parser("exchange-info", help="Get exchange information")
-    ex.add_argument("--symbol", help="Filter by symbol (e.g. BTCUSDT)")
-
-    args = parser.parse_args(argv)
-
-    requester = _build_requester(args.requester, timeout=args.timeout)
-    client = BinanceClient(requester, base_url=args.base_url)
-
-    try:
-        if args.cmd == "ping":
-            res = client.ping()
-        elif args.cmd == "time":
-            res = client.time()
-        elif args.cmd == "exchange-info":
-            res = client.exchange_info(symbol=args.symbol)
-        else:
-            parser.error("unknown command")
-    except Exception as exc:
-        print(f"Error: {exc}", file=sys.stderr)
-        return 2
-
-    try:
-        print(json.dumps(res, indent=2, ensure_ascii=False))
-    except (TypeError, ValueError):
-        print(res)
-
+    app(prog_name="binance-trader", args=argv)
     return 0
 
 

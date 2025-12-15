@@ -24,10 +24,14 @@ class BinanceClient:
     """
 
     def __init__(
-        self, requester: Requester, base_url: str = "https://api.binance.com"
+        self,
+        requester: Requester,
+        base_url: str = "https://api.binance.com",
+        timeout: float | None = None,
     ) -> None:
         self._requester = requester
         self.base_url = base_url.rstrip("/")
+        self._timeout = timeout
 
     def _url(self, path: str) -> str:
         if path.startswith("/"):
@@ -36,13 +40,15 @@ class BinanceClient:
 
     def ping(self) -> Any:
         """Test connectivity to the REST API."""
-        return self._requester.get(self._url("/api/v3/ping"))
+        return self._requester.get(self._url("/api/v3/ping"), timeout=self._timeout)
 
     def time(self) -> Any:
         """Get server time."""
-        return self._requester.get(self._url("/api/v3/time"))
+        return self._requester.get(self._url("/api/v3/time"), timeout=self._timeout)
 
     def exchange_info(self, symbol: Optional[str] = None) -> Any:
         """Get exchange information. Pass `symbol` to filter for a single symbol."""
         params: Optional[Dict[str, Any]] = {"symbol": symbol} if symbol else None
-        return self._requester.get(self._url("/api/v3/exchangeInfo"), params=params)
+        return self._requester.get(
+            self._url("/api/v3/exchangeInfo"), params=params, timeout=self._timeout
+        )

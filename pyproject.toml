@@ -5,7 +5,7 @@ description = ""
 authors = [{ name = "Daniel Caballero", email = "danielcaballero88@gmail.com" }]
 requires-python = ">=3.14"
 readme = "README.md"
-dependencies = ["httpx>=0.28.1", "requests>=2.31.0,<3.0.0"]
+dependencies = ["httpx>=0.28.1", "requests>=2.31.0,<3.0.0", "typer>=0.20.0"]
 
 [tool.hatch.build.targets.sdist]
 include = ["src/binance_trader"]
